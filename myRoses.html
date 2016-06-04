@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" media="screen" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/css/bootstrap.min.css">
+	<title>My Roses</title>
+	<!--  -->
+	<style>
+		body {
+			background-color: azure;
+		}
+		
+		.btn-save {
+			border: none;
+			background-color: pink;
+		}
+		
+		.btn-go {
+			border: none;
+			background-color: hotpink;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+
+
+
+		<div class="col-md-8">
+			<div id="main"></div>
+			<div id="result"></div>
+			<div id="bank"></div>
+			<div id="newbank"></div>
+			<div id="daycost"></div>
+			<div id="daysold"></div>
+			<div id="dayprofit"></div>
+			<div id="dayloss"></div>
+			<div id="net"></div>
+
+		</div>
+
+
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+	<script>
+		//CONSTRUCTOR  
+		function Rose() {
+
+			this.rbuy = 0;
+			this.costpdozen = 0;
+			this.minbuy = 0;
+			this.minsell = 0;
+			this.maxsell = 0;
+			this.simulation = 0;
+			this.sellfor = 0;
+
+			this.bank = 250;
+
+			this.form_data = [
+                    ['text', 'form-control', 'rbuy', 'How many dozen roses would you like to buy?', 'label'],
+                    ['text', 'form-control', 'costpdozen', '$ per dozen', 'label'],
+                    ['text', 'form-control', 'minbuy', 'Minimum Dozens Required to Buy', 'label'],
+                    ['text', 'form-control', 'minSell', 'Minimum possible sold per day.', 'label'],
+                    ['text', 'form-control', 'maxSell', 'Maximum possible sold per day.', 'label'],
+                    ['text', 'form-control', 'simulation', 'Days in business simulation.', 'label'],
+                    ['text', 'form-control', 'sellfor', 'Price of roses', 'label']
+                ];
+
+			this.getRandomNumber = function (min, max) {
+				return Math.round(Math.random() * (max - min) + min);
+			}
+
+			this.simData = [];
+
+		}
+
+
+		Rose.prototype.getFormData = function () {
+
+			this.rbuy = document.getElementById('rbuy').value;
+			this.costpdozen = document.getElementById('costpdozen').value;
+			this.minbuy = document.getElementById('minbuy').value;
+			this.minsell = document.getElementById('minSell').value;
+			this.maxsell = document.getElementById('maxSell').value;
+			this.simulation = document.getElementById('simulation').value;
+			this.sellfor = document.getElementById('sellfor').value;
+
+
+		}
+
+		Rose.prototype.buildView = function () {
+			var form = this.mainForm();
+			var bt = this.bankTxt;
+			// document.getElementById('bank').innerHTML = bt;    
+			var view = form;
+			this.showView(view, 'result');
+			return;
+
+		}
+
+
+		Rose.prototype.mainForm = function () {
+
+			var content = '';
+			//showviewvar t;
+			content += '<h1>My Flower Business</h2>';
+			content += '<h3>Initial investment: $250 </h3>';
+			for (var i = 0; i < this.form_data.length; i++) {
+
+				var t = this.form_data[i];
+
+				content += this.tabView(t);
+				content += '<br/>';
+			}
+			content += '';
+			content += '<button class="btn btn-save" onclick="myRose.getFormData()">Save/Store</button>   ';
+			content += '<button class="btn btn-go" onclick="myRose.simulator()">Run</button>';
+			content += '</div>';
+			return content;
+
+		}
+
+
+		Rose.prototype.tabView = function (arr) {
+			var formtype = arr[0];
+			var formclass = arr[1];
+			var formid = arr[2];
+			var labl = arr[3];
+
+			var formView = labl + '<input type="' + formtype + '" class="' + formclass + '" id="' + formid + '" /> ';
+			return formView;
+
+		}
+
+
+		Rose.prototype.simulator = function () {
+			var newbank;
+			var costofday = 0;
+			var arr = [];
+			var rosesSold = 0;
+			var simulation = this.simulation;
+
+			console.log('# of days in sim', simulation);
+
+			//this is where the form is built
+			//calling this.showView and passing in two parameters(what to print,div)
+			for (var i = 0; i < simulation.length; i++) {
+
+				rosesSold = this.getRandomNumber(this.minsell, this.maxsell);
+				console.log('# of roses sold', rosesSold);
+				this.showView('# of roses sold: ' + rosesSold, 'daysold');
+				var profit = (rosesSold * this.sellfor);
+				console.log('profit $' + profit);
+				this.showView('Gross Profit: ' + profit, 'dayprofit');
+
+				costofday = this.rbuy * this.costpdozen;
+				console.log('cost of day $' + costofday);
+				this.showView('Spent: $' + costofday, 'daycost');
+
+				console.log('net $' + (profit - costofday));
+				this.showView('Net:  ' + (profit - costofday) + '', 'net');
+
+				newbank = this.bank + (profit - costofday);
+				console.log('new bank $' + newbank);
+
+
+				this.showView('Bank: $' + newbank, 'bank');
+				this.checkBank(newbank);
+
+				arr.push(rosesSold, profit, costofday);
+				this.simData.push(arr);
+
+			}
+		}
+
+
+		Rose.prototype.showView = function (show, divId) {
+
+			document.getElementById(divId).innerHTML = show;
+
+
+		}
+
+		//when bank is below 0, console log over.
+		Rose.prototype.checkBank = function (pocket) {
+			if (pocket <= 0) {
+				console.log('game over! you\'re out of business');
+				return;
+			}
+		}
+
+		//--------------------
+
+		var myRose = new Rose();
+		myRose.buildView();
+	</script>
+</body>
+
+</html>
